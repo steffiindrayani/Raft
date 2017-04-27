@@ -6,13 +6,12 @@ from datetime import datetime
 
 class loadbalancer():
 	
-	idnode = 0
 	listnode = []
 	listserver = []
 	leadertimeout = 10
 	servertimeout = 10
 	startwaitleader = 0
-	startwait timeout = 0
+	startwaittimeout = 0
 	
 
 	def __init__(self, numberOfNode, numberOfServer):
@@ -23,7 +22,6 @@ class loadbalancer():
 
 	def isLeaderTimeOut(self):
 		currtime = datetime.now()
-		if (currtime - 
+		if (currtime - startwaitleader > 0) return True else return False
 		
-			
-emp = loadbalancer(10,10)
+	

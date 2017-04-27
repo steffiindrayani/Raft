@@ -7,13 +7,11 @@ class server:
    port 	= 0
    load 	= 0
 
+
    def __init__(self, ip, port, load):
 	   server.idserver =+1
 	   server.ip = ip
 	   server.port = port
 	   server.load = load
 
-	   
-	   
-      
-
+	
