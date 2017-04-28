@@ -43,6 +43,9 @@ class NodeHandler(BaseHTTPRequestHandler):
                 # self.wfile.write(str(PrimeRequest).encode('utf-8'))                
                 # NUMB_JSON = simplejson.dumps({'JsonType':'NODE_REQUEST', 'PrimeRequest': + PrimeRequest})
                 # r = requests.get("http://localhost:" + str(PORT_NODE), data=NUMB_JSON)                              
+            elif JsonType == "CONFIG":
+
+
 
         except Exception as ex:
             self.send_response(500)
@@ -77,5 +80,6 @@ class NodeHandler(BaseHTTPRequestHandler):
 
 print('----- NODE -----')
 print('SELF_PORT : ' + str(SELF_PORT))
+
 server = HTTPServer(("", SELF_PORT), NodeHandler)
 server.serve_forever()
