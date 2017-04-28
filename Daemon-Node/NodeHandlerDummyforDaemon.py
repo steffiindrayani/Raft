@@ -4,8 +4,7 @@ import requests
 import simplejson
 
 'const'
-SELF_PORT = 9001
-PORT_WORKER = 13337
+SELF_PORT = 9002
 
 class NodeHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -21,23 +20,14 @@ class NodeHandler(BaseHTTPRequestHandler):
             print("Message received. JsonType : " + JsonType)
             self.send_response(200)
 
-            if JsonType == 'CLIENT_REQUEST': #Kalau Json Type yang diterima adalah dari Client.....        
-                PrimeRequest = data['PrimeRequest']
-                print("CLIENT IS REQUESTING PRIME NUMBER: " + str(PrimeRequest))
+            if JsonType == 'SERVER INFO': #Kalau Json Type yang diterima adalah dari Daemon.....        
+                CPULoad = data['CPULoad']
+                print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad))
                 # self.wfile.write(str(PrimeRequest).encode('utf-8'))                
                 # NUMB_JSON = simplejson.dumps({'JsonType':'NODE_REQUEST', 'PrimeRequest': + PrimeRequest})
                 # r = requests.get("http://localhost:" + str(PORT_NODE), data=NUMB_JSON)
-                url = "http://localhost:" + str(PORT_WORKER) + "/" + str(PrimeRequest)
-                r = requests.get(url)
-                if r.status_code == 200:
-                    self.send_response(200)
-                    answer = r.text
-                    print(r.text)
-                    self.wfile.write(str(r.text).encode('utf-8'))                
-                else:
-                    self.send_response(500)
-                    self.wfile.write(str(-1).encode('utf-8'))                                    
-
+				
+               
         except Exception as ex:
             self.send_response(500)
             self.end_headers()
