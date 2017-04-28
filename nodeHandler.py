@@ -6,6 +6,8 @@ import simplejson
 import sys
 from node import node
 from node import nodeInfo
+from node import server
+from node import rivalC
 import time
 
 SELF_PORT = int(sys.argv[1])
@@ -14,7 +16,7 @@ ip = 'localhost'
 class NodeHandler(BaseHTTPRequestHandler):
 
 	nInfo = nodeInfo(ip, SELF_PORT)
-	node = node(nInfo)
+	n = node(nInfo)
 
 	def do_POST(self):
 		try:
@@ -46,15 +48,13 @@ class NodeHandler(BaseHTTPRequestHandler):
 					self.wfile.write(str(-1).encode('utf-8'))
 			
 			elif JsonType == 'SERVER INFO':
-				#Kalau Json Type yang diterima adalah dari Daemon.....
 				CPULoad = data['CPULoad']
 				port = data['PORT']
 				ip = data['IP']
 				print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad))
-				# self.wfile.write(str(PrimeRequest).encode('utf-8'))                
-				# NUMB_JSON = simplejson.dumps({'JsonType':'NODE_REQUEST', 'PrimeRequest': + PrimeRequest})
-				# r = requests.get("http://localhost:" + str(PORT_NODE), data=NUMB_JSON)
-			
+				if n.status == "LEADER":
+					n.updateServerLoad(port, CPULoad)
+
 			elif JsonType == 'CANDIDACY REQUEST':
 				ID_CANDIDATE = data['IDNODE']
 				PORT_CANDIDATE = data['PORT']
@@ -73,16 +73,13 @@ class NodeHandler(BaseHTTPRequestHandler):
 			# 	print("lala")
 
 			elif JsonType == "HEARTBEAT":
-				'Ubah vote menjadi 0'
 				if self.voted == 1:
 					self.voted = 0
 				
 				self.send_response(200)
-				'Mendapatkan data server terkecil'
 				ServerPort = data['SERVER PORT']
 				print ("Server with smallest load = " + str(ServerPort))
 				
-				'Send Response to Leader'
 				self.wfile.write(("Server Info Accepted").encode('utf-8'))
 			
 			elif JsonType == "CONFIG":
@@ -93,11 +90,15 @@ class NodeHandler(BaseHTTPRequestHandler):
 				while i < CountOfServer:
 					s = "s" + str(i) 
 					print("Server " + str(i) + ": " + str(data[s]))
+					serv = server(ip, data[s], 0)
+					n.addServer(serv)
 					i += 1
 				i = 0
 				while i < CountOfNode:
 					n = "n" + str(i)
 					print("Node " + str(i) + ": " + str(data[n]))
+					nInfo = nodeInfo(ip, data[n])
+					n.addNeigh(nInfo)
 					i += 1
 					
 		except Exception as ex:
@@ -121,27 +122,18 @@ class NodeHandler(BaseHTTPRequestHandler):
 			self.wfile.write("Prime Number: ".encode('utf-8'))                
 			self.wfile.write(str(r.text).encode('utf-8'))                
 			self.send_response(200)
-		except Exception as ex:
-			self.send_response(500)
-			self.end_headers()
-			print(ex)
 
 		except Exception as ex:
 			self.send_response(500)
 			self.end_headers()
 			print(ex)
-
-
-def main():
-	
-
 
 print('----- NODE -----')
 print('SELF_PORT : ' + str(SELF_PORT))
 
 while 1:
 	time.sleep(1)
-	print("Hai :)")
+	main(NodeHandler)
 	server = HTTPServer(("", SELF_PORT), NodeHandler)
 	server.serve_forever()
 

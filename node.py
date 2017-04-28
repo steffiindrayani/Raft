@@ -46,11 +46,11 @@ class node:
 
 	def __init__(self, nInfo):
 		self.nodeInfo	= nInfo;
-		self.timeout	= randint(2,5)
+		self.timeout	= randint(3,5)
 		self.startTime	= datetime.now()
 	
 	def resetTimeout(self):
-		self.timeout = randint(2,5)
+		self.timeout = randint(3,5)
 		self.startTime	= datetime.now()
 		
 	def isTimeOut(self):
@@ -63,7 +63,12 @@ class node:
 		self.listneigh.append(nInfo)
 		
 	def addServer(self, server):
-		self.listServer.append(server)
+		self.listserver.append(server)
+
+	def updateServerLoad(self, port, load):
+		for index in range(len(self.listserver)):
+			if self.listserver[index].port == port:
+				self.listserver[index].load = load
 
 	def addRival(self, rivalC):
 		self.listrival.append(rivalC)
@@ -95,7 +100,7 @@ class node:
 		print ("-----I GOT A VOTE-----")
 		LOAD_JSON = simplejson.dumps({'JsonType':'VOTECC', 'IDNODE': + self.nodeInfo.idnode, 'PORT': + self.nodeInfo.port})
 		
-		for node in listrival:
+		for node in self.listrival:
 			print ("Rival Port : " + str(node.port))
 			print ("My Port : " + str(self.nodeInfo.port))
 			print (LOAD_JSON)
@@ -109,13 +114,13 @@ class node:
 	
 	def recVoteCC(self, id):
 		idCandidate = id
-		for rival in listrival:
+		for rival in self.listrival:
 			if rival.idnode == idCandidate:
 				rival.numvote += 1
 
 	def maxVote(self):
 		mxVote = 0;
-		for vote in listrival:
+		for vote in self.listrival:
 			if mxVote < vote.numvote:
 				mxVote = vote.numvote
 		return mxVote
@@ -133,7 +138,7 @@ class node:
 	def getSmallestLoad(self):
 		minLoad = 999
 		minPort = 0
-		for server in listserver:
+		for server in self.listserver:
 			if minLoad > server.load:
 				minLoad = server.load
 				minPort = server.port
@@ -144,7 +149,7 @@ class node:
 		servPort = getSmallestLoad()
 		LOAD_JSON = simplejson.dumps({'JsonType':'HEARTBEAT', 'SERVER PORT': + servPort})
 		
-		for node in listneigh:
+		for node in self.listneigh:
 			print ("Sending heartbeat")
 			print ("Destination : " + str(node.port))
 			print ("My Port : " + str(self.nodeInfo.port))
@@ -155,6 +160,3 @@ class node:
 			print("---- HEARTBEAT RESPONSE : ----")
 			print(r.text)
 		
-	def recServerLoad(self, ip, load, port):
-		server = server(ip, port, load)
-		addServer(server)
