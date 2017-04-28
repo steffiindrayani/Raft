@@ -4,13 +4,18 @@ from http.server import BaseHTTPRequestHandler
 import requests
 import simplejson
 import sys
+from node import node
+from node import nodeInfo
+import time
 
 SELF_PORT = int(sys.argv[1])
+ip = 'localhost'
 
 class NodeHandler(BaseHTTPRequestHandler):
-	
-	voted = 0
-	 
+
+	nInfo = nodeInfo(ip, SELF_PORT)
+	node = node(nInfo)
+
 	def do_POST(self):
 		try:
 			self.send_response(200)
@@ -39,6 +44,7 @@ class NodeHandler(BaseHTTPRequestHandler):
 				else:
 					self.send_response(500)
 					self.wfile.write(str(-1).encode('utf-8'))
+			
 			elif JsonType == 'SERVER INFO':
 				#Kalau Json Type yang diterima adalah dari Daemon.....
 				CPULoad = data['CPULoad']
@@ -48,15 +54,24 @@ class NodeHandler(BaseHTTPRequestHandler):
 				# self.wfile.write(str(PrimeRequest).encode('utf-8'))                
 				# NUMB_JSON = simplejson.dumps({'JsonType':'NODE_REQUEST', 'PrimeRequest': + PrimeRequest})
 				# r = requests.get("http://localhost:" + str(PORT_NODE), data=NUMB_JSON)
-			elif JsonType == 'CANDIDANCY REQUEST':
-				PORT_CANDIDATE = data['Port']
+			
+			elif JsonType == 'CANDIDACY REQUEST':
+				ID_CANDIDATE = data['IDNODE']
+				PORT_CANDIDATE = data['PORT']
 				print ("NODE " + str(PORT_CANDIDATE) + " ASK FOR VOTE")
 				
-				if self.voted == 0:
-					self.wfile.write(("1").encode('utf-8'))
-					self.voted = 1
+				if self.n.status == 'FOLLOWER':
+					if self.n.voted == 0:
+						self.wfile.write(("1").encode('utf-8'))
+						self.n.voted = 1
+					else:
+						self.wfile.write(("0").encode('utf-8'))
 				else:
-					self.wfile.write(("0").encode('utf-8'))
+					self.n.recVoteCF(ID_CANDIDATE)
+			
+			# elif JsonType == "VOTECC":
+			# 	print("lala")
+
 			elif JsonType == "HEARTBEAT":
 				'Ubah vote menjadi 0'
 				if self.voted == 1:
@@ -69,6 +84,7 @@ class NodeHandler(BaseHTTPRequestHandler):
 				
 				'Send Response to Leader'
 				self.wfile.write(("Server Info Accepted").encode('utf-8'))
+			
 			elif JsonType == "CONFIG":
 				CountOfServer = int(data['CountOfServer'])
 				CountOfNode = int(data['CountOfNode'])
@@ -115,8 +131,17 @@ class NodeHandler(BaseHTTPRequestHandler):
 			self.end_headers()
 			print(ex)
 
+
+def main():
+	
+
+
 print('----- NODE -----')
 print('SELF_PORT : ' + str(SELF_PORT))
 
-server = HTTPServer(("", SELF_PORT), NodeHandler)
-server.serve_forever()
+while 1:
+	time.sleep(1)
+	print("Hai :)")
+	server = HTTPServer(("", SELF_PORT), NodeHandler)
+	server.serve_forever()
+

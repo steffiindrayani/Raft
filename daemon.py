@@ -18,7 +18,7 @@ class daemon():
 		
 	def sendLoadtoNode(self, port, load):
 		print ("-----DAEMON-----")
-		LOAD_JSON = simplejson.dumps({'JsonType':'SERVER INFO', 'PORT': + port, 'CPULoad': + load})
+		LOAD_JSON = simplejson.dumps({'JsonType':'SERVER INFO', 'IP': + ip, 'PORT': + port, 'CPULoad': + load})
 		
 		print (LOAD_JSON)
 		print ("Node Port : " + str(PORT_NODE))

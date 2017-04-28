@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from datetime import datetime
 from random import randint
+import requests
+import simplejson
 
 class nodeInfo:
 	idnode = 0
@@ -20,8 +22,18 @@ class rivalC:
 		self.idnode = idnode
 		self.numvote = numvote
 
+class server:
+	ip = 0
+	port = 0
+	load = 0
+
+	def __init__(self, ip, port, load):
+		self.ip = ip
+		self.port = port
+		self.load = load
+
 class node:
-	nodeInfo = []
+	nodeInfo = nodeInfo(0, 0)
 	status = "FOLLOWER"
 	vote = 0
 	timeout = 0
@@ -30,6 +42,7 @@ class node:
 	listneigh = []
 	listserver = []
 	listrival = []
+	voted = 0
 
 	def __init__(self, nInfo):
 		self.nodeInfo	= nInfo;
@@ -58,24 +71,44 @@ class node:
 	def candidacyRequest(self):
 		if (self.isTimeOut == True):
 			self.status = "CANDIDATE"
-			'kirim ke semua klo u jd candidate'
+			print ("-----CANDIDACY REQUEST-----")
+			LOAD_JSON = simplejson.dumps({'JsonType':'CANDIDACY REQUEST', 'IDNODE': + self.nodeInfo.idnode, 'PORT': + self.nodeInfo.port})
+			
+			for node in listneigh:
+				print ("Sending heartbeat")
+				print ("Destination : " + str(node.port))
+				print ("My Port : " + str(self.nodeInfo.port))
+				print (LOAD_JSON)
 
-	def recVoteCF(self):
-		'terima reqvote dari candidate ke follower, follower bales response, candidate append list'
-		idCandidate = 0
-		if self.status == "FOLLOWER":
-			#response
-		else if self.status == "CANDIDATE"
+				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+
+				print("---- HEARTBEAT RESPONSE : ----")
+				print(r.text)
+
+	def recVoteCF(self, idC):
+		idCandidate = idC
+		if self.status == "CANDIDATE":
 			cand = rivalC(idCandidate, 0)
 			addRival(rivalC)
 
 	def sendVoteCC(self):
-		'kirim klo lu dapet vote ke candidate lain'
+		print ("-----I GOT A VOTE-----")
+		LOAD_JSON = simplejson.dumps({'JsonType':'VOTECC', 'IDNODE': + self.nodeInfo.idnode, 'PORT': + self.nodeInfo.port})
 		
+		for node in listrival:
+			print ("Rival Port : " + str(node.port))
+			print ("My Port : " + str(self.nodeInfo.port))
+			print (LOAD_JSON)
+
+			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+
+			print("---- CANDIDATE RESPONSE : ----")
+			rVote = int(r.text)
+			print(r.text)
+			self.vote += rVote
 	
-	def recVoteCC(self):
-		'terima vote dari candidate lain'
-		idCandidate = 0
+	def recVoteCC(self, id):
+		idCandidate = id
 		for rival in listrival:
 			if rival.idnode == idCandidate:
 				rival.numvote += 1
@@ -92,31 +125,36 @@ class node:
 			mxVote = maxVote()
 			if self.vote < mxVote:
 				self.status = "FOLLOWER"
-			else
+			else:
 				self.status = "LEADER"
 			vote = 0
 			listrival = []
 		
+	def getSmallestLoad(self):
+		minLoad = 999
+		minPort = 0
+		for server in listserver:
+			if minLoad > server.load:
+				minLoad = server.load
+				minPort = server.port
+		return minPort
+
 	def sendHeartbeat(self):
-		'kirim heartbeat(load sm list) ke follower [post request] pake waktu bukan nunggu balesan'
 		print ("-----HEARTBEAT-----")
-		LOAD_JSON = simplejson.dumps({'JsonType':'SERVER INFO', 'PORT': + port, 'CPULoad': + load})
+		servPort = getSmallestLoad()
+		LOAD_JSON = simplejson.dumps({'JsonType':'HEARTBEAT', 'SERVER PORT': + servPort})
 		
-		print (LOAD_JSON)
-		print ("Node Port : " + str(PORT_NODE))
-		print ("CPU Load  : " + str(load))
+		for node in listneigh:
+			print ("Sending heartbeat")
+			print ("Destination : " + str(node.port))
+			print ("My Port : " + str(self.nodeInfo.port))
+			print (LOAD_JSON)
 
-		r = requests.post("http://localhost:" + str(PORT_NODE), data=LOAD_JSON)
+			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
-		print("---- RESPONSE : ---	")
-		#response
-		print(r.text) 
-	
-	def recHeartbeat(self):
-		'terima heartbeat dari follower [langsung response request]'
+			print("---- HEARTBEAT RESPONSE : ----")
+			print(r.text)
 		
-		
-	def recServerLoad(self):
-		'terima server load dari daemon'
-
-
+	def recServerLoad(self, ip, load, port):
+		server = server(ip, port, load)
+		addServer(server)
