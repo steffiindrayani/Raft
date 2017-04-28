@@ -120,7 +120,7 @@ class NodeHandler(BaseHTTPRequestHandler	):
 			prime_number_requested = int(args[1])
 			self.send_response(200)
 			self.end_headers()
-			s
+			PORT_WORKER = self.n.getSmallestLoad()
 			url = "http://localhost:" + str(PORT_WORKER) + "/" + str(prime_number_requested)
 			r = requests.get(url)
 			answer = r.text
