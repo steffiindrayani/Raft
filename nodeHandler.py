@@ -3,9 +3,9 @@ from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 import requests
 import simplejson
+import sys
 
-SELF_PORT = 9001
-PORT_WORKER = 13337
+SELF_PORT = int(sys.argv[1])
 
 class NodeHandler(BaseHTTPRequestHandler):
 	
@@ -69,6 +69,20 @@ class NodeHandler(BaseHTTPRequestHandler):
 				
 				'Send Response to Leader'
 				self.wfile.write(("Server Info Accepted").encode('utf-8'))
+			elif JsonType == "CONFIG":
+				CountOfServer = int(data['CountOfServer'])
+				CountOfNode = int(data['CountOfNode'])
+				self.send_response(200)
+				i = 0
+				while i < CountOfServer:
+					s = "s" + str(i) 
+					print("Server " + str(i) + ": " + str(data[s]))
+					i += 1
+				i = 0
+				while i < CountOfNode:
+					n = "n" + str(i)
+					print("Node " + str(i) + ": " + str(data[n]))
+					i += 1
 					
 		except Exception as ex:
 			self.send_response(500)
