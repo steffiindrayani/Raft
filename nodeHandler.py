@@ -104,8 +104,9 @@ class NodeHandler(BaseHTTPRequestHandler	):
 					print("Node " + str(i) + ": " + str(data[nx]))
 					nInfo = nodeInfo(ip, data[nx])
 					self.n.addNeigh(nInfo)
+					self.n.majorVote = int(len(self.n.listneigh)) + 1 / 2
 					i += 1
-					
+
 		except Exception as ex:
 			self.send_response(500)
 			self.end_headers()

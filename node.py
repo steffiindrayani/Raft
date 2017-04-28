@@ -46,6 +46,7 @@ class node:
 	listrival = []
 	voted = 0
 	hasC = 0
+	majorVote = 0
 
 	def __init__(self, nInfo):
 		self.nodeInfo	= nInfo;
@@ -88,8 +89,10 @@ class node:
 				print ("Sending heartbeat")
 				print ("Destination : " + str(node.port))
 				print ("My Port : " + str(self.nodeInfo.port))
-
-				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+				try:
+					r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+				except:
+					print("Connection Lost to Port: " + str(node.port))
 
 				print("---- CANREQ RESPONSE : ----")
 				# print(r.text)
@@ -108,8 +111,11 @@ class node:
 		for node in self.listrival:
 			print ("Rival Port : " + str(node.port))
 			print ("My Port : " + str(self.nodeInfo.port))
-
-			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+			
+			try:
+				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+			except:
+				print("Connection Lost to Port: " + str(node.port))
 
 			print("---- CANDIDATE RESPONSE : ----")
 			rVote = int(r.text)
@@ -159,9 +165,12 @@ class node:
 		for node in self.listneigh:
 			print ("Destination : " + str(node.port))
 			print ("Server Port : " + str(servPort))
-			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+			try:
+				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+			except:
+				print("Connection Lost to Port: " + str(node.port))
 
 			print("Heartbeat Response : \n")
 			print("----")
-			# print(r.text
+			# print(r.text)
 		
