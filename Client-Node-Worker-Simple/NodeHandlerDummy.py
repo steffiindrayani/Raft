@@ -11,6 +11,7 @@ class NodeHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             self.send_response(200)
+
             self.send_header('Content-type','text/html')
             self.end_headers()
             self.data_string = self.rfile.read(int(self.headers['Content-Length']))
@@ -36,32 +37,6 @@ class NodeHandler(BaseHTTPRequestHandler):
                 else:
                     self.send_response(500)
                     self.wfile.write(str(-1).encode('utf-8'))                                    
-
-        except Exception as ex:
-            self.send_response(500)
-            self.end_headers()
-            print(ex)
-
-    def do_GET(self):
-        try:
-            args = self.path.split('/')
-            if len(args) != 2:
-                raise Exception()
-            n = int(args[1])
-            self.send_response(200)
-            self.end_headers()
-            url = "http://localhost:" + str(PORT_WORKER) + "/" + str(n)
-            r = requests.get(url)
-            answer = r.text
-            print(answer)
-            self.wfile.write("[Response] ".encode('utf-8'))                
-            self.wfile.write("Prime Number: ".encode('utf-8'))                
-            self.wfile.write(str(r.text).encode('utf-8'))                
-            self.send_response(200)
-        except Exception as ex:
-            self.send_response(500)
-            self.end_headers()
-            print(ex)
 
         except Exception as ex:
             self.send_response(500)
