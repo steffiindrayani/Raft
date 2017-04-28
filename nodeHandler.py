@@ -15,8 +15,9 @@ import _thread
 SELF_PORT = int(sys.argv[1])
 ip = 'localhost'
 STARTOPERATING = 0
+PORT_WORKER = 13337 # INI YANG DIAMBIL
 
-class NodeHandler(BaseHTTPRequestHandler):
+class NodeHandler(BaseHTTPRequestHandler	):
 	nInfo = nodeInfo(ip, SELF_PORT)
 	n = node(nInfo)
 
@@ -29,10 +30,9 @@ class NodeHandler(BaseHTTPRequestHandler):
 			self.end_headers()
 			data = simplejson.loads((self.data_string))
 			JsonType = data['JsonType']
-			print("Message received. JsonType : " + JsonType)
 			self.send_response(200)
 
-			if JsonType == 'CLIENT_REQUEST': #Kalau Json Type yang diterima adalah dari Client.....        
+			if JsonType == 'CLIENT_REQUEST':
 				PrimeRequest = data['PrimeRequest']
 				print("CLIENT IS REQUESTING PRIME NUMBER: " + str(PrimeRequest))
 				url = "http://localhost:" + str(PORT_WORKER) + "/" + str(PrimeRequest)
@@ -48,10 +48,10 @@ class NodeHandler(BaseHTTPRequestHandler):
 			
 			elif JsonType == 'SERVER INFO':
 				CPULoad = data['CPULoad']
-				port = data['PORT']
-				print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad))
-				if n.status == "LEADER":
-					n.updateServerLoad(port, CPULoad)
+				port = int(data['PORT'])
+				if self.n.status == "LEADER":
+					print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad) + " on PORT : " + str(port))
+					self.n.updateServerLoad(port, CPULoad)
 
 			elif JsonType == 'CANDIDACY REQUEST':
 				ID_CANDIDATE = data['IDNODE']
@@ -97,6 +97,7 @@ class NodeHandler(BaseHTTPRequestHandler):
 					serv = server(ip, data[s], 0)
 					self.n.addServer(serv)
 					i += 1
+
 				i = 0
 				while i < CountOfNode:
 					nx = "n" + str(i)
@@ -115,10 +116,11 @@ class NodeHandler(BaseHTTPRequestHandler):
 			args = self.path.split('/')
 			if len(args) != 2:
 				raise Exception()
-			n = int(args[1])
+			prime_number_requested = int(args[1])
 			self.send_response(200)
 			self.end_headers()
-			url = "http://localhost:" + str(PORT_WORKER) + "/" + str(n)
+			s
+			url = "http://localhost:" + str(PORT_WORKER) + "/" + str(prime_number_requested)
 			r = requests.get(url)
 			answer = r.text
 			print(answer)
@@ -144,18 +146,17 @@ def main(NodeHandler):
 				time.sleep(1)
 				# stop = True
 			else:
-				print("Waiting for Heartbeat | " + str(SELF_PORT))
+				print("[FOLLOWER] Waiting for Heartbeat | " + str(SELF_PORT))
 		else:
 			print("Not Operating")
 			time.sleep(1)
 		
-		time.sleep(0.5)
+		time.sleep(1)
 
 
 print('----- NODE -----')
 print('SELF_PORT : ' + str(SELF_PORT))
 
 server = HTTPServer(("", SELF_PORT), NodeHandler)
-# thread1 = threading.Thread(target=server.serve_forever, args=())
 _thread.start_new_thread(server.serve_forever, ())
 main(NodeHandler)

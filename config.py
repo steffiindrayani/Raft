@@ -9,7 +9,7 @@ NUMBER_OF_NODE = int(sys.argv[1])
 NUMBER_OF_SERVER = int(sys.argv[2])
 
 FIRST_NODE = 9001
-FIRST_SERVER = 13337
+FIRST_SERVER = 12222
 
 JSON = {'JsonType':'CONFIG', 'CountOfNode': + NUMBER_OF_NODE, 'CountOfServer': + NUMBER_OF_SERVER}
 i = 0

@@ -1,13 +1,13 @@
 #!/usr/bin/python
 import requests
 import simplejson
+import sys
 
 class client:
    'identitas satu node'
    ip = 0
    port = 0
    numberrequested = 0
-
 
    def __init__(self):
       localhost 	= '120.0.0.1'

@@ -4,6 +4,8 @@ from random import randint
 import requests
 import simplejson
 
+ipG = 'localhost'
+
 class nodeInfo:
 	idnode = 0
 	ip = 0
@@ -65,9 +67,13 @@ class node:
 		self.listserver.append(server)
 
 	def updateServerLoad(self, port, load):
-		for index in range(len(self.listserver)):
-			if self.listserver[index].port == port:
-				self.listserver[index].load = load
+		# print("START UPDATE")
+		for aaa in self.listserver:
+			# print("Server di UPDATE: " + str(aaa.port))
+			if aaa.port == port:
+				self.listserver.remove(aaa)
+		serv = server(ipG, port, load)
+		self.addServer(serv)
 
 	def addRival(self, rivalC):
 		self.listrival.append(rivalC)
@@ -143,17 +149,19 @@ class node:
 		return minPort
 
 	def sendHeartbeat(self):
-		print ("-----HEARTBEAT-----")
+		print ("[HEARTBEAT]")
 		servPort = self.getSmallestLoad()
 		LOAD_JSON = simplejson.dumps({'JsonType':'HEARTBEAT', 'SERVER PORT': + servPort})
 		self.resetTimeout()
-		for node in self.listneigh:
-			print ("Sending heartbeat")
-			print ("Destination : " + str(node.port))
-			print ("My Port : " + str(self.nodeInfo.port))
+		print ("Sending heartbeat")
+		print ("My Port : " + str(self.nodeInfo.port) + "\n")
 
+		for node in self.listneigh:
+			print ("Destination : " + str(node.port))
+			print ("Server Port : " + str(servPort))
 			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
-			print("---- HEARTBEAT RESPONSE : ----")
-			# print(r.text)
+			print("Heartbeat Response : \n")
+			print("----")
+			# print(r.text
 		
