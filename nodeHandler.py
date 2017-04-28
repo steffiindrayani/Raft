@@ -49,7 +49,6 @@ class NodeHandler(BaseHTTPRequestHandler):
 			elif JsonType == 'SERVER INFO':
 				CPULoad = data['CPULoad']
 				port = data['PORT']
-				ip = data['IP']
 				print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad))
 				if n.status == "LEADER":
 					n.updateServerLoad(port, CPULoad)
@@ -73,12 +72,11 @@ class NodeHandler(BaseHTTPRequestHandler):
 			# elif JsonType == "VOTECC":
 
 			elif JsonType == "HEARTBEAT":
-				if self.voted == 1:
-					self.voted = 0
+				if self.n.voted == 1:
+					self.n.voted = 0
 				
 				self.send_response(200)
 				ServerPort = data['SERVER PORT']
-				print ("Server with smallest load = " + str(ServerPort))
 				self.n.resetTimeout()
 
 				self.wfile.write(("Server Info Accepted").encode('utf-8'))
@@ -90,21 +88,21 @@ class NodeHandler(BaseHTTPRequestHandler):
 				CountOfServer = int(data['CountOfServer'])
 				CountOfNode = int(data['CountOfNode'])
 				self.send_response(200)
-				n.resetTimeout()
+				self.n.resetTimeout()
 
 				i = 0
 				while i < CountOfServer:
 					s = "s" + str(i) 
 					print("Server " + str(i) + ": " + str(data[s]))
 					serv = server(ip, data[s], 0)
-					n.addServer(serv)
+					self.n.addServer(serv)
 					i += 1
 				i = 0
 				while i < CountOfNode:
-					n = "n" + str(i)
-					print("Node " + str(i) + ": " + str(data[n]))
-					nInfo = nodeInfo(ip, data[n])
-					n.addNeigh(nInfo)
+					nx = "n" + str(i)
+					print("Node " + str(i) + ": " + str(data[nx]))
+					nInfo = nodeInfo(ip, data[nx])
+					self.n.addNeigh(nInfo)
 					i += 1
 					
 		except Exception as ex:
@@ -136,16 +134,17 @@ class NodeHandler(BaseHTTPRequestHandler):
 
 def main(NodeHandler):
 	nH = NodeHandler
-	while 1:
-		print(str(STARTOPERATING))
+	stop = False
+	while stop == False:
 		if (STARTOPERATING):
 			#Leader Election
 			nH.n.candidacyRequest()
-
 			if nH.n.status == "LEADER":
 				nH.n.sendHeartbeat()
+				time.sleep(1)
+				# stop = True
 			else:
-				print("Waiting for Heartbeat")
+				print("Waiting for Heartbeat | " + str(SELF_PORT))
 		else:
 			print("Not Operating")
 			time.sleep(1)

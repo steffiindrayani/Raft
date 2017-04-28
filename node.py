@@ -54,7 +54,7 @@ class node:
 		
 	def isTimeOut(self):
 		now = datetime.now()
-		if ( (now - startTime).total_seconds() >= timeout):
+		if ( (now - self.startTime).total_seconds() >= self.timeout):
 			 return True
 		return False
 		
@@ -73,28 +73,27 @@ class node:
 		self.listrival.append(rivalC)
 	
 	def candidacyRequest(self):
-		if (self.isTimeOut == True):
+		if (self.isTimeOut() == True):
 			self.status = "CANDIDATE"
 			print ("-----CANDIDACY REQUEST-----")
 			LOAD_JSON = simplejson.dumps({'JsonType':'CANDIDACY REQUEST', 'IDNODE': + self.nodeInfo.idnode, 'PORT': + self.nodeInfo.port})
 			
-			for node in listneigh:
+			for node in self.listneigh:
 				print ("Sending heartbeat")
 				print ("Destination : " + str(node.port))
 				print ("My Port : " + str(self.nodeInfo.port))
-				print (LOAD_JSON)
 
 				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
 				print("---- CANREQ RESPONSE : ----")
-				print(r.text)
+				# print(r.text)
 		self.setLeader()
 
 	def recVoteCF(self, idC):
 		idCandidate = idC
 		if self.status == "CANDIDATE":
 			cand = rivalC(idCandidate, 0)
-			addRival(rivalC)
+			self.addRival(rivalC)
 
 	def sendVoteCC(self):
 		print ("-----I GOT A VOTE-----")
@@ -103,13 +102,12 @@ class node:
 		for node in self.listrival:
 			print ("Rival Port : " + str(node.port))
 			print ("My Port : " + str(self.nodeInfo.port))
-			print (LOAD_JSON)
 
 			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
 			print("---- CANDIDATE RESPONSE : ----")
 			rVote = int(r.text)
-			print(r.text)
+			# print(r.text)
 			self.vote += rVote
 	
 	def recVoteCC(self, id):
@@ -127,13 +125,13 @@ class node:
 
 	def setLeader(self):
 		if self.status == "CANDIDATE":
-			mxVote = maxVote()
+			mxVote = self.maxVote()
 			if self.vote < mxVote:
 				self.status = "FOLLOWER"
 			else:
 				self.status = "LEADER"
-			vote = 0
-			listrival = []
+			self.vote = 0
+			self.listrival = []
 		
 	def getSmallestLoad(self):
 		minLoad = 999
@@ -146,17 +144,16 @@ class node:
 
 	def sendHeartbeat(self):
 		print ("-----HEARTBEAT-----")
-		servPort = getSmallestLoad()
+		servPort = self.getSmallestLoad()
 		LOAD_JSON = simplejson.dumps({'JsonType':'HEARTBEAT', 'SERVER PORT': + servPort})
-		
+		self.resetTimeout()
 		for node in self.listneigh:
 			print ("Sending heartbeat")
 			print ("Destination : " + str(node.port))
 			print ("My Port : " + str(self.nodeInfo.port))
-			print (LOAD_JSON)
 
 			r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
 			print("---- HEARTBEAT RESPONSE : ----")
-			print(r.text)
+			# print(r.text)
 		
