@@ -43,11 +43,10 @@ class node:
 	listserver = []
 	listrival = []
 	voted = 0
+	hasC = 0
 
 	def __init__(self, nInfo):
 		self.nodeInfo	= nInfo;
-		self.timeout	= randint(3,5)
-		self.startTime	= datetime.now()
 	
 	def resetTimeout(self):
 		self.timeout = randint(3,5)
@@ -87,8 +86,9 @@ class node:
 
 				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 
-				print("---- HEARTBEAT RESPONSE : ----")
+				print("---- CANREQ RESPONSE : ----")
 				print(r.text)
+		self.setLeader()
 
 	def recVoteCF(self, idC):
 		idCandidate = idC

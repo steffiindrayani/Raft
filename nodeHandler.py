@@ -9,12 +9,14 @@ from node import nodeInfo
 from node import server
 from node import rivalC
 import time
+import threading
+import _thread
 
 SELF_PORT = int(sys.argv[1])
 ip = 'localhost'
+STARTOPERATING = 0
 
 class NodeHandler(BaseHTTPRequestHandler):
-
 	nInfo = nodeInfo(ip, SELF_PORT)
 	n = node(nInfo)
 
@@ -33,9 +35,6 @@ class NodeHandler(BaseHTTPRequestHandler):
 			if JsonType == 'CLIENT_REQUEST': #Kalau Json Type yang diterima adalah dari Client.....        
 				PrimeRequest = data['PrimeRequest']
 				print("CLIENT IS REQUESTING PRIME NUMBER: " + str(PrimeRequest))
-				# self.wfile.write(str(PrimeRequest).encode('utf-8'))                
-				# NUMB_JSON = simplejson.dumps({'JsonType':'NODE_REQUEST', 'PrimeRequest': + PrimeRequest})
-				# r = requests.get("http://localhost:" + str(PORT_NODE), data=NUMB_JSON)
 				url = "http://localhost:" + str(PORT_WORKER) + "/" + str(PrimeRequest)
 				r = requests.get(url)
 				if r.status_code == 200:
@@ -64,13 +63,14 @@ class NodeHandler(BaseHTTPRequestHandler):
 					if self.n.voted == 0:
 						self.wfile.write(("1").encode('utf-8'))
 						self.n.voted = 1
+						self.n.resetTimeout()
 					else:
 						self.wfile.write(("0").encode('utf-8'))
+					self.n.hasC = 1
 				else:
 					self.n.recVoteCF(ID_CANDIDATE)
 			
 			# elif JsonType == "VOTECC":
-			# 	print("lala")
 
 			elif JsonType == "HEARTBEAT":
 				if self.voted == 1:
@@ -79,13 +79,19 @@ class NodeHandler(BaseHTTPRequestHandler):
 				self.send_response(200)
 				ServerPort = data['SERVER PORT']
 				print ("Server with smallest load = " + str(ServerPort))
-				
+				self.n.resetTimeout()
+
 				self.wfile.write(("Server Info Accepted").encode('utf-8'))
 			
 			elif JsonType == "CONFIG":
+				global STARTOPERATING
+				STARTOPERATING = 1
+				print("StartOperating : " + str(STARTOPERATING))
 				CountOfServer = int(data['CountOfServer'])
 				CountOfNode = int(data['CountOfNode'])
 				self.send_response(200)
+				n.resetTimeout()
+
 				i = 0
 				while i < CountOfServer:
 					s = "s" + str(i) 
@@ -128,12 +134,29 @@ class NodeHandler(BaseHTTPRequestHandler):
 			self.end_headers()
 			print(ex)
 
+def main(NodeHandler):
+	nH = NodeHandler
+	while 1:
+		print(str(STARTOPERATING))
+		if (STARTOPERATING):
+			#Leader Election
+			nH.n.candidacyRequest()
+
+			if nH.n.status == "LEADER":
+				nH.n.sendHeartbeat()
+			else:
+				print("Waiting for Heartbeat")
+		else:
+			print("Not Operating")
+			time.sleep(1)
+		
+		time.sleep(0.5)
+
+
 print('----- NODE -----')
 print('SELF_PORT : ' + str(SELF_PORT))
 
-while 1:
-	time.sleep(1)
-	main(NodeHandler)
-	server = HTTPServer(("", SELF_PORT), NodeHandler)
-	server.serve_forever()
-
+server = HTTPServer(("", SELF_PORT), NodeHandler)
+# thread1 = threading.Thread(target=server.serve_forever, args=())
+_thread.start_new_thread(server.serve_forever, ())
+main(NodeHandler)
