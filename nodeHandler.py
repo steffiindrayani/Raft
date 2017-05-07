@@ -65,11 +65,16 @@ class NodeHandler(BaseHTTPRequestHandler	):
 						self.n.resetTimeout()
 					else:
 						self.wfile.write(("0").encode('utf-8'))
-					self.n.hasC = 1
 				else:
 					self.n.recVoteCF(ID_CANDIDATE)
 			
-			# elif JsonType == "VOTECC":
+			elif JsonType == "VOTECC":
+				if self.n.status == 'CANDIDATE':
+					ID_RIVAL = data['IDNODE']
+					PORT_RIVAL = data['PORT']
+					print ("RIVAL NODE " + str(PORT_RIVAL) + " GOT A VOTE")
+				
+					recVoteCC(ID_RIVAL)
 
 			elif JsonType == "HEARTBEAT":
 				if self.n.voted == 1:
@@ -89,7 +94,7 @@ class NodeHandler(BaseHTTPRequestHandler	):
 				CountOfNode = int(data['CountOfNode'])
 				self.send_response(200)
 				self.n.resetTimeout()
-
+				self.n.majorVote = (CountOfNode + 1) / 2
 				i = 0
 				while i < CountOfServer:
 					s = "s" + str(i) 
@@ -104,7 +109,6 @@ class NodeHandler(BaseHTTPRequestHandler	):
 					print("Node " + str(i) + ": " + str(data[nx]))
 					nInfo = nodeInfo(ip, data[nx])
 					self.n.addNeigh(nInfo)
-					self.n.majorVote = int(len(self.n.listneigh)) + 1 / 2
 					i += 1
 
 		except Exception as ex:
@@ -142,12 +146,16 @@ def main(NodeHandler):
 		if (STARTOPERATING):
 			#Leader Election
 			nH.n.candidacyRequest()
-			if nH.n.status == "LEADER":
-				nH.n.sendHeartbeat()
-				time.sleep(1)
-				# stop = True
+			if nH.n.isRestartElection():
+				print("\nLEADER NOT SELECTED. RESTARTING ELECTION.\n")
 			else:
-				print("[FOLLOWER] Waiting for Heartbeat | " + str(SELF_PORT))
+				if nH.n.status == "LEADER":
+					nH.n.sendHeartbeat()
+					time.sleep(1)
+				elif nH.n.status == "FOLLOWER":
+					print("[FOLLOWER] Waiting for Heartbeat | " + str(SELF_PORT))
+				else:
+					print("I'm a CANDIDATE")
 		else:
 			print("Not Operating")
 			time.sleep(1)

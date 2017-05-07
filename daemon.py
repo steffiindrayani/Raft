@@ -73,7 +73,10 @@ class daemon():
 			print ("Node Port : " + str(node))
 			print ("CPU Load  : " + str(self.load))
 
-			r = requests.post("http://localhost:" + str(node), data=LOAD_JSON)
+			try:
+				r = requests.post("http://localhost:" + str(node), data=LOAD_JSON)
+			except:
+				print("Connection Lost to Port: " + str(node))
 
 			print("---- RESPONSE : ---	")
 			#response

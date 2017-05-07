@@ -45,14 +45,13 @@ class node:
 	listserver = []
 	listrival = []
 	voted = 0
-	hasC = 0
 	majorVote = 0
 
 	def __init__(self, nInfo):
 		self.nodeInfo	= nInfo;
 	
 	def resetTimeout(self):
-		self.timeout = randint(3,5)
+		self.timeout = 4
 		self.startTime	= datetime.now()
 		
 	def isTimeOut(self):
@@ -82,20 +81,27 @@ class node:
 	def candidacyRequest(self):
 		if (self.isTimeOut() == True):
 			self.status = "CANDIDATE"
+			self.vote += 1
 			print ("-----CANDIDACY REQUEST-----")
 			LOAD_JSON = simplejson.dumps({'JsonType':'CANDIDACY REQUEST', 'IDNODE': + self.nodeInfo.idnode, 'PORT': + self.nodeInfo.port})
-			
+
 			for node in self.listneigh:
-				print ("Sending heartbeat")
 				print ("Destination : " + str(node.port))
 				print ("My Port : " + str(self.nodeInfo.port))
+
+				print("---- CANREQ RESPONSE : ----")
 				try:
 					r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
+					rVote = int(r.text)
+					self.vote += rVote
+					if rVote == 1:
+						self.sendVoteCC()
 				except:
 					print("Connection Lost to Port: " + str(node.port))
 
-				print("---- CANREQ RESPONSE : ----")
-				# print(r.text)
+				print()
+				self.resetTimeout()
+
 		self.setLeader()
 
 	def recVoteCF(self, idC):
@@ -110,34 +116,31 @@ class node:
 		
 		for node in self.listrival:
 			print ("Rival Port : " + str(node.port))
-			print ("My Port : " + str(self.nodeInfo.port))
-			
+
+			print("---- CANDIDATE RESPONSE : ----")
 			try:
 				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 			except:
 				print("Connection Lost to Port: " + str(node.port))
-
-			print("---- CANDIDATE RESPONSE : ----")
-			rVote = int(r.text)
-			# print(r.text)
-			self.vote += rVote
 	
-	def recVoteCC(self, id):
-		idCandidate = id
+	def recVoteCC(self, idR):
+		idCandidate = idR
 		for rival in self.listrival:
 			if rival.idnode == idCandidate:
 				rival.numvote += 1
 
-	def maxVote(self):
-		mxVote = 0;
-		for vote in self.listrival:
-			if mxVote < vote.numvote:
-				mxVote = vote.numvote
-		return mxVote
+	def isRestartElection(self):
+		idR = 0;
+		for rival in self.listrival:
+			if self.vote == rival.numvote:
+				idR = rival.idnode
+		return idR != 0
 
 	def setLeader(self):
 		if self.status == "CANDIDATE":
-			mxVote = self.maxVote()
+			mxVote = self.majorVote
+			print("My Vote: " + str(self.vote))
+			print("Winning Vote: " + str(mxVote))
 			if self.vote < mxVote:
 				self.status = "FOLLOWER"
 			else:
@@ -165,12 +168,12 @@ class node:
 		for node in self.listneigh:
 			print ("Destination : " + str(node.port))
 			print ("Server Port : " + str(servPort))
+
+			print("Heartbeat Response :")
 			try:
 				r = requests.post("http://localhost:" + str(node.port), data=LOAD_JSON)
 			except:
 				print("Connection Lost to Port: " + str(node.port))
-
-			print("Heartbeat Response : \n")
 			print("----")
 			# print(r.text)
 		
