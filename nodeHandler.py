@@ -16,6 +16,7 @@ SELF_PORT = int(sys.argv[1])
 ip = 'localhost'
 STARTOPERATING = 0
 PORT_WORKER = 13337 # INI YANG DIAMBIL
+fileName = 'LOG_' + str(SELF_PORT) + '.txt'
 
 class NodeHandler(BaseHTTPRequestHandler	):
 	nInfo = nodeInfo(ip, SELF_PORT)
@@ -49,6 +50,9 @@ class NodeHandler(BaseHTTPRequestHandler	):
 			elif JsonType == 'SERVER INFO':
 				CPULoad = data['CPULoad']
 				port = int(data['PORT'])
+				f = open(fileName, 'a')
+				f.write('Received from PORT: ' + str(port) + '. CPU load: ' + str(CPULoad) + '.\n')
+				f.close()
 				if self.n.status == "LEADER":
 					print("DAEMON IS SENDING CPU LOAD: " + str(CPULoad) + " on PORT : " + str(port))
 					self.n.updateServerLoad(port, CPULoad)
@@ -95,6 +99,9 @@ class NodeHandler(BaseHTTPRequestHandler	):
 				self.send_response(200)
 				self.n.resetTimeout()
 				self.n.majorVote = (CountOfNode + 1) / 2
+				f = open(fileName, 'w')
+				f.write('Start Logging\n')
+				f.close()
 				i = 0
 				while i < CountOfServer:
 					s = "s" + str(i) 
